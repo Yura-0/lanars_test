@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lanars_test/core/injector.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
-import 'core/routes.dart';
+import 'features/auth/bloc/auth_bloc.dart';
+import 'features/auth/bloc/auth_event.dart';
+import 'features/auth/bloc/auth_state.dart';
+import 'features/auth/pages/auth_page.dart';
+import 'features/home/pages/home_page.dart';
 
 class LanarsApp extends StatelessWidget {
-  const LanarsApp({super.key});
+  const LanarsApp({Key? key});
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.auth,
-      routes: AppRoutes.getRoutes(),
-      home: const Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return ResponsiveSizer(
+      builder: (context, orientation, screenType) {
+        return BlocProvider(
+          create: (context) => locator<AuthBloc>()..add(AppStarted()),
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              Widget initialWidget;
+              if (state is AuthSuccess) {
+                initialWidget = const HomePage();
+              } else {
+                initialWidget = const AuthPage();
+              }
+
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                home: initialWidget,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
