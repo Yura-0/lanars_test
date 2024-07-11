@@ -4,8 +4,6 @@ import 'package:lanars_test/core/injector.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 import 'features/auth/bloc/auth_bloc.dart';
-import 'features/auth/bloc/auth_event.dart';
-import 'features/auth/bloc/auth_state.dart';
 import 'features/auth/pages/auth_page.dart';
 import 'features/home/pages/home_page.dart';
 

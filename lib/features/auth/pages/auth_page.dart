@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../bloc/auth_bloc.dart';
-import '../bloc/auth_event.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/login_button.dart';
 
@@ -61,56 +60,65 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Sign In",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Check your network connection")),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Sign In",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-            ),
-            SizedBox(height: Adaptive.h(7)),
-            AuthTextField(
-              labelText: 'Email',
-              hintText: 'Enter your email',
-              controller: emailController,
-              validator: validateEmail,
-               onChanged: (_) {
-                setState(() {
-                  emailError = validatePassword(emailController.text);
-                });
-              },
-            ),
-            SizedBox(height: Adaptive.h(5)),
-            AuthTextField(
-              labelText: 'Password',
-              hintText: 'Enter your password',
-              isPassword: true,
-              controller: passwordController,
-              validator: validatePassword,
-              onChanged: (_) {
-                setState(() {
-                  passwordError = validatePassword(passwordController.text);
-                });
-              },
-            ),
-            SizedBox(height: Adaptive.h(7)),
-            LoginButton(onTap: () {
-              if (emailController.text.isNotEmpty &&
-                  passwordController.text.isNotEmpty) {
-                _loginPressed();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Check your email and password, or network"),
-                ));
-              }
-            }),
-          ],
+              SizedBox(height: Adaptive.h(7)),
+              AuthTextField(
+                labelText: 'Email',
+                hintText: 'Enter your email',
+                controller: emailController,
+                validator: validateEmail,
+                onChanged: (_) {
+                  setState(() {
+                    emailError = validatePassword(emailController.text);
+                  });
+                },
+              ),
+              SizedBox(height: Adaptive.h(5)),
+              AuthTextField(
+                labelText: 'Password',
+                hintText: 'Enter your password',
+                isPassword: true,
+                controller: passwordController,
+                validator: validatePassword,
+                onChanged: (_) {
+                  setState(() {
+                    passwordError = validatePassword(passwordController.text);
+                  });
+                },
+              ),
+              SizedBox(height: Adaptive.h(7)),
+              LoginButton(onTap: () {
+                if (emailController.text.isNotEmpty &&
+                    passwordController.text.isNotEmpty) {
+                  _loginPressed();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Check your email and password"),
+                  ));
+                }
+              }),
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lanars_test/features/auth/bloc/auth_state.dart';
 
 import '../../auth/bloc/auth_bloc.dart';
 import '../widgets/user_drawer.dart';

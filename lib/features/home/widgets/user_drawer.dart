@@ -4,7 +4,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../auth/authorization/model/i_user.dart';
 import '../../auth/bloc/auth_bloc.dart';
-import '../../auth/bloc/auth_event.dart';
+
 
 class UserDrawer extends StatelessWidget {
   final IUser? user;
