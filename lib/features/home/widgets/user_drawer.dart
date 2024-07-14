@@ -37,7 +37,10 @@ class UserDrawer extends StatelessWidget {
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
-                context.read<AuthBloc>().add(LogoutRequested());
+                showDialog(
+                  context: context,
+                  builder: (context) => const LogOutDialog(),
+                );
               },
             ),
           ],
@@ -45,4 +48,33 @@ class UserDrawer extends StatelessWidget {
       ),
     );
   }
+}
+
+class LogOutDialog extends StatelessWidget {
+  const LogOutDialog({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Logout'),
+      content: const Text('Are you sure you want to logout?'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            context.read<AuthBloc>().add(LogoutRequested());
+            Navigator.of(context).pop();
+          },
+          child: const Text('Logout'),
+        ),
+      ],
+    );
+  }
+
+  
 }

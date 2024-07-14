@@ -1,20 +1,17 @@
 
 part of 'photo_bloc.dart';
 
-abstract class BeerEvent extends Equatable {
-  const BeerEvent();
+// events.dart
+abstract class BeerEvent {}
 
-  @override
-  List<Object?> get props => [];
+class LoadPhotos extends BeerEvent {
+  final int page;
+
+  LoadPhotos({this.page = 1});
 }
-
-class LoadPhotos extends BeerEvent {}
 
 class LoadMorePhotos extends BeerEvent {
   final int page;
 
   LoadMorePhotos({required this.page});
-
-  @override
-  List<Object?> get props => [page];
 }

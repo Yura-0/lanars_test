@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../auth/bloc/auth_bloc.dart';
 import '../bloc/photo_bloc.dart';
@@ -16,28 +19,95 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _scrollController = ScrollController();
-  final _alphabet = List.generate(26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index));
+  final List<Photo> _photosCache = [];
+  bool _isLoading = false;
+  int _currentPage = 1;
+  StreamSubscription? _beerBlocSubscription;
+
+  final _alphabet =
+      List.generate(26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index));
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    context.read<BeerBloc>().add(LoadPhotos());
+    _loadPhotos();
   }
 
   void _onScroll() {
     if (_scrollController.position.atEdge && _scrollController.position.pixels != 0) {
-      final currentState = context.read<BeerBloc>().state;
-      if (currentState is PhotosLoaded) {
-        final page = (currentState.photos.length ~/ 10) + 1;
-        context.read<BeerBloc>().add(LoadMorePhotos(page: page));
-      }
+      _loadMorePhotos();
     }
+  }
+
+  Future<void> _loadPhotos() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    final BeerBloc beerBloc = context.read<BeerBloc>();
+    beerBloc.add(LoadPhotos(page: _currentPage));
+    _currentPage++;
+
+    _beerBlocSubscription?.cancel();
+    _beerBlocSubscription = beerBloc.stream.listen((state) {
+      if (state is PhotosLoaded) {
+        setState(() {
+          final Set<int> existingPhotoIds = _photosCache.map((photo) => photo.id).toSet();
+          final List<Photo> newPhotos = state.photos.where((photo) => !existingPhotoIds.contains(photo.id)).toList();
+          
+          // Limit new photos to ensure total photos don't exceed 50
+          final int currentTotalPhotos = _photosCache.length;
+          if (currentTotalPhotos + newPhotos.length > 50) {
+            final int remainingSpace = 50 - currentTotalPhotos;
+            _photosCache.addAll(newPhotos.take(remainingSpace));
+          } else {
+            _photosCache.addAll(newPhotos);
+          }
+
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
+  Future<void> _loadMorePhotos() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    final BeerBloc beerBloc = context.read<BeerBloc>();
+    beerBloc.add(LoadMorePhotos(page: _currentPage));
+    _currentPage++;
+
+    _beerBlocSubscription?.cancel();
+    _beerBlocSubscription = beerBloc.stream.listen((state) {
+      if (state is PhotosLoaded) {
+        setState(() {
+          final Set<int> existingPhotoIds = _photosCache.map((photo) => photo.id).toSet();
+          final List<Photo> newPhotos = state.photos.where((photo) => !existingPhotoIds.contains(photo.id)).toList();
+          
+          // Limit new photos to ensure total photos don't exceed 50
+          final int currentTotalPhotos = _photosCache.length;
+          if (currentTotalPhotos + newPhotos.length > 50) {
+            final int remainingSpace = 50 - currentTotalPhotos;
+            _photosCache.addAll(newPhotos.take(remainingSpace));
+          } else {
+            _photosCache.addAll(newPhotos);
+          }
+
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _beerBlocSubscription?.cancel();
     super.dispose();
   }
 
@@ -73,10 +143,10 @@ class _HomePageState extends State<HomePage> {
       ),
       body: BlocBuilder<BeerBloc, BeerState>(
         builder: (context, state) {
-          if (state is BeerInitial) {
+          if (state is BeerInitial || _isLoading && _photosCache.isEmpty) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is PhotosLoaded) {
-            final photos = state.photos;
+          } else if (state is PhotosLoaded || _photosCache.isNotEmpty) {
+            final photos = _photosCache;
             final Map<String, List<Photo>> alphabetMap = {};
 
             for (var photo in photos) {
@@ -86,8 +156,6 @@ class _HomePageState extends State<HomePage> {
               }
               alphabetMap[firstLetter]!.add(photo);
             }
-
-            print('Alphabet Map Length: ${alphabetMap.length}');
 
             return Row(
               children: [
@@ -111,58 +179,52 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      context.read<BeerBloc>().add(LoadPhotos());
-                    },
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _alphabet.length,
-                      itemBuilder: (context, index) {
-                        final letter = _alphabet[index];
-                        final photosForLetter = alphabetMap[letter] ?? [];
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _alphabet.length,
+                    itemBuilder: (context, index) {
+                      final letter = _alphabet[index];
+                      final photosForLetter = alphabetMap[letter] ?? [];
 
-                        if (photosForLetter.isEmpty) {
-                          print('Letter $letter has no photos');
-                        }
-
-                        return photosForLetter.isNotEmpty
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      letter,
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                      return photosForLetter.isNotEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    letter,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  ...photosForLetter.map((photo) {
-                                    return Card(
-                                      child: ListTile(
-                                        leading: Image.network(
-                                          photo.imageUrl,
-                                          height: 50,
-                                          width: 50,
-                                          fit: BoxFit.cover,
-                                        ),
-                                        title: Text(photo.photographer),
-                                        subtitle: Text(
-                                          'Photo ID: ${photo.id}',
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                ),
+                                ...photosForLetter.map((photo) {
+                                  return Card(
+                                    child: ListTile(
+                                      leading: CachedNetworkImage(
+                                        imageUrl: photo.imageUrl,
+                                        height: 50,
+                                        width: 50,
+                                        fit: BoxFit.cover,
+                                        errorWidget: (context, url, error) => const Image(
+                                          image: AssetImage('assets/images/default_avatar.png'),
                                         ),
                                       ),
-                                    );
-                                  }),
-                                ],
-                              )
-                            : Container();
-                      },
-                    ),
+                                      title: Text(photo.photographer),
+                                      subtitle: Text(
+                                        'Photo ID: ${photo.id}',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                            )
+                          : Container();
+                    },
                   ),
                 ),
               ],
@@ -177,3 +239,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
