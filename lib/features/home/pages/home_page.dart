@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 
 import '../../auth/bloc/auth_bloc.dart';
 import '../bloc/photo_bloc.dart';
@@ -24,8 +24,8 @@ class _HomePageState extends State<HomePage> {
   int _currentPage = 1;
   StreamSubscription? _beerBlocSubscription;
 
-  final _alphabet =
-      List.generate(26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index));
+  final _alphabet = List.generate(
+      26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index));
 
   @override
   void initState() {
@@ -35,7 +35,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.atEdge && _scrollController.position.pixels != 0) {
+    if (_scrollController.position.atEdge &&
+        _scrollController.position.pixels != 0) {
       _loadMorePhotos();
     }
   }
@@ -54,10 +55,12 @@ class _HomePageState extends State<HomePage> {
     _beerBlocSubscription = beerBloc.stream.listen((state) {
       if (state is PhotosLoaded) {
         setState(() {
-          final Set<int> existingPhotoIds = _photosCache.map((photo) => photo.id).toSet();
-          final List<Photo> newPhotos = state.photos.where((photo) => !existingPhotoIds.contains(photo.id)).toList();
-          
-          // Limit new photos to ensure total photos don't exceed 50
+          final Set<int> existingPhotoIds =
+              _photosCache.map((photo) => photo.id).toSet();
+          final List<Photo> newPhotos = state.photos
+              .where((photo) => !existingPhotoIds.contains(photo.id))
+              .toList();
+
           final int currentTotalPhotos = _photosCache.length;
           if (currentTotalPhotos + newPhotos.length > 50) {
             final int remainingSpace = 50 - currentTotalPhotos;
@@ -86,10 +89,12 @@ class _HomePageState extends State<HomePage> {
     _beerBlocSubscription = beerBloc.stream.listen((state) {
       if (state is PhotosLoaded) {
         setState(() {
-          final Set<int> existingPhotoIds = _photosCache.map((photo) => photo.id).toSet();
-          final List<Photo> newPhotos = state.photos.where((photo) => !existingPhotoIds.contains(photo.id)).toList();
-          
-          // Limit new photos to ensure total photos don't exceed 50
+          final Set<int> existingPhotoIds =
+              _photosCache.map((photo) => photo.id).toSet();
+          final List<Photo> newPhotos = state.photos
+              .where((photo) => !existingPhotoIds.contains(photo.id))
+              .toList();
+
           final int currentTotalPhotos = _photosCache.length;
           if (currentTotalPhotos + newPhotos.length > 50) {
             final int remainingSpace = 50 - currentTotalPhotos;
@@ -150,7 +155,9 @@ class _HomePageState extends State<HomePage> {
             final Map<String, List<Photo>> alphabetMap = {};
 
             for (var photo in photos) {
-              final firstLetter = photo.photographer[0].toUpperCase();
+              final firstLetter = photo.photographer.isNotEmpty
+                  ? photo.photographer[0].toUpperCase()
+                  : '#';
               if (!alphabetMap.containsKey(firstLetter)) {
                 alphabetMap[firstLetter] = [];
               }
@@ -184,7 +191,9 @@ class _HomePageState extends State<HomePage> {
                     itemCount: _alphabet.length,
                     itemBuilder: (context, index) {
                       final letter = _alphabet[index];
-                      final photosForLetter = alphabetMap[letter] ?? [];
+                      final photosForLetter = alphabetMap.containsKey(letter)
+                          ? alphabetMap[letter]!
+                          : [];
 
                       return photosForLetter.isNotEmpty
                           ? Column(
@@ -203,14 +212,14 @@ class _HomePageState extends State<HomePage> {
                                 ...photosForLetter.map((photo) {
                                   return Card(
                                     child: ListTile(
-                                      leading: CachedNetworkImage(
-                                        imageUrl: photo.imageUrl,
+                                      leading: Image.network(
+                                        photo.imageUrl,
                                         height: 50,
                                         width: 50,
                                         fit: BoxFit.cover,
-                                        errorWidget: (context, url, error) => const Image(
-                                          image: AssetImage('assets/images/default_avatar.png'),
-                                        ),
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(Icons.error);
+                                        }
                                       ),
                                       title: Text(photo.photographer),
                                       subtitle: Text(
@@ -239,4 +248,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
