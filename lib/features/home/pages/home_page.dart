@@ -25,7 +25,8 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription? _beerBlocSubscription;
 
   final _alphabet = List.generate(
-      26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index));
+    26, (index) => String.fromCharCode('A'.codeUnitAt(0) + index),
+  );
 
   @override
   void initState() {
@@ -157,7 +158,7 @@ class _HomePageState extends State<HomePage> {
             for (var photo in photos) {
               final firstLetter = photo.photographer.isNotEmpty
                   ? photo.photographer[0].toUpperCase()
-                  : '#';
+                  : '#'; // Placeholder if photographer name is empty
               if (!alphabetMap.containsKey(firstLetter)) {
                 alphabetMap[firstLetter] = [];
               }
@@ -218,10 +219,12 @@ class _HomePageState extends State<HomePage> {
                                         width: 50,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(Icons.error);
+                                          return const Icon(Icons.error); 
                                         }
                                       ),
-                                      title: Text(photo.photographer),
+                                      title: Text(photo.photographer.isNotEmpty
+                                          ? photo.photographer
+                                          : 'Guest'), 
                                       subtitle: Text(
                                         'Photo ID: ${photo.id}',
                                         maxLines: 2,
