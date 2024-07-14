@@ -1,15 +1,15 @@
 part of 'photo_bloc.dart';
 
-abstract class BeerState extends Equatable {
-  const BeerState();
+abstract class PhotoState extends Equatable {
+  const PhotoState();
 
   @override
   List<Object?> get props => [];
 }
 
-class BeerInitial extends BeerState {}
+class BeerInitial extends PhotoState {}
 
-class PhotosLoaded extends BeerState {
+class PhotosLoaded extends PhotoState {
   final List<Photo> photos;
 
   const PhotosLoaded({required this.photos});
@@ -18,7 +18,7 @@ class PhotosLoaded extends BeerState {
   List<Object?> get props => [photos];
 }
 
-class PhotosError extends BeerState {
+class PhotosError extends PhotoState {
   final String message;
 
   const PhotosError({required this.message});

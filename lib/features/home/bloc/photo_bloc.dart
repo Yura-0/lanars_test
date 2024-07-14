@@ -6,17 +6,17 @@ import '../models/photo_model.dart';
 part 'photo_event.dart';
 part 'photo_state.dart';
 
-class BeerBloc extends Bloc<BeerEvent, BeerState> {
+class PhotoBloc extends Bloc<PhotoEvent, PhotoState> {
   final Dio _dio = Dio();
   final String baseUrl = 'https://api.pexels.com/v1/curated';
   final String apiKey = 'aFOWIfO4wcZXCcsGNMdBiZiGeiEtrDw8lidmMlld5XgrDKorkCFfxKy6';
 
-  BeerBloc() : super(BeerInitial()) {
+  PhotoBloc() : super(BeerInitial()) {
     on<LoadPhotos>(_onLoadPhotos);
     on<LoadMorePhotos>(_onLoadMorePhotos);
   }
 
-  Future<void> _onLoadPhotos(LoadPhotos event, Emitter<BeerState> emit) async {
+  Future<void> _onLoadPhotos(LoadPhotos event, Emitter<PhotoState> emit) async {
     try {
       final response = await _dio.get(baseUrl, queryParameters: {
         'page': event.page,
@@ -33,7 +33,7 @@ class BeerBloc extends Bloc<BeerEvent, BeerState> {
     }
   }
 
-  Future<void> _onLoadMorePhotos(LoadMorePhotos event, Emitter<BeerState> emit) async {
+  Future<void> _onLoadMorePhotos(LoadMorePhotos event, Emitter<PhotoState> emit) async {
     if (state is PhotosLoaded) {
       final currentState = state as PhotosLoaded;
       try {

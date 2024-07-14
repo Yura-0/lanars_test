@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   void _onScroll() {
     if (_scrollController.position.atEdge &&
         _scrollController.position.pixels != 0) {
-      _loadMorePhotos();
+      // _loadMorePhotos();
     }
   }
 
@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    final BeerBloc beerBloc = context.read<BeerBloc>();
+    final PhotoBloc beerBloc = context.read<PhotoBloc>();
     beerBloc.add(LoadPhotos(page: _currentPage));
     _currentPage++;
 
@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
       _isLoading = true;
     });
 
-    final BeerBloc beerBloc = context.read<BeerBloc>();
+    final PhotoBloc beerBloc = context.read<PhotoBloc>();
     beerBloc.add(LoadMorePhotos(page: _currentPage));
     _currentPage++;
 
@@ -147,7 +147,7 @@ class _HomePageState extends State<HomePage> {
           }
         },
       ),
-      body: BlocBuilder<BeerBloc, BeerState>(
+      body: BlocBuilder<PhotoBloc, PhotoState>(
         builder: (context, state) {
           if (state is BeerInitial || _isLoading && _photosCache.isEmpty) {
             return const Center(child: CircularProgressIndicator());
@@ -187,56 +187,61 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _alphabet.length,
-                    itemBuilder: (context, index) {
-                      final letter = _alphabet[index];
-                      final photosForLetter = alphabetMap.containsKey(letter)
-                          ? alphabetMap[letter]!
-                          : [];
-
-                      return photosForLetter.isNotEmpty
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    letter,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
+                  child: RefreshIndicator(
+                     onRefresh: () async {
+                      _loadMorePhotos();
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _alphabet.length,
+                      itemBuilder: (context, index) {
+                        final letter = _alphabet[index];
+                        final photosForLetter = alphabetMap.containsKey(letter)
+                            ? alphabetMap[letter]!
+                            : [];
+                    
+                        return photosForLetter.isNotEmpty
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      letter,
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                ...photosForLetter.map((photo) {
-                                  return Card(
-                                    child: ListTile(
-                                      leading: Image.network(
-                                        photo.imageUrl,
-                                        height: 50,
-                                        width: 50,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(Icons.error); 
-                                        }
+                                  ...photosForLetter.map((photo) {
+                                    return Card(
+                                      child: ListTile(
+                                        leading: Image.network(
+                                          photo.imageUrl,
+                                          height: 50,
+                                          width: 50,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(Icons.error); 
+                                          }
+                                        ),
+                                        title: Text(photo.photographer.isNotEmpty
+                                            ? photo.photographer
+                                            : 'Guest'), 
+                                        subtitle: Text(
+                                          'Photo ID: ${photo.id}',
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      title: Text(photo.photographer.isNotEmpty
-                                          ? photo.photographer
-                                          : 'Guest'), 
-                                      subtitle: Text(
-                                        'Photo ID: ${photo.id}',
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  );
-                                }),
-                              ],
-                            )
-                          : Container();
-                    },
+                                    );
+                                  }),
+                                ],
+                              )
+                            : Container();
+                      },
+                    ),
                   ),
                 ),
               ],

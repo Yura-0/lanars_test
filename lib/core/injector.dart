@@ -16,5 +16,5 @@ Future<void> setupLocator() async {
   // Register blocs
   locator.registerLazySingleton<AuthBloc>(() => AuthBloc(prefs));
 
-  locator.registerLazySingleton<BeerBloc>(() => BeerBloc());
+  locator.registerLazySingleton<PhotoBloc>(() => PhotoBloc());
 }

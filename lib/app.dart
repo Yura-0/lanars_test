@@ -21,7 +21,7 @@ class LanarsApp extends StatelessWidget {
               create: (context) => locator<AuthBloc>()..add(AppStarted()),
             ),
             BlocProvider(
-              create: (context) => BeerBloc(),
+              create: (context) => PhotoBloc(),
             ),
           ],
           child: BlocBuilder<AuthBloc, AuthState>(
